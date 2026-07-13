@@ -1,0 +1,108 @@
+Code Smell Detector - What The Code Does
+
+This project is a web app that checks source code for common code smells and maintainability problems.
+
+How it works
+
+1. The user pastes code into the editor in the frontend.
+2. The frontend sends the code and selected language to the analysis endpoint.
+3. The backend parses the code and runs smell-detection rules.
+4. The backend returns smells, scores, recommendations, and a summary.
+5. The frontend shows the results in the UI and highlights issues in the editor.
+6. If the user is signed in, the analysis can be saved to history.
+
+Frontend code
+
+The frontend is built with Next.js and React.
+
+- frontend/src/app/page.tsx
+  Loads the main analyzer page and starts the user session.
+
+- frontend/src/components/CodeAnalyzer.tsx
+  Controls the full analysis workflow.
+  It checks that the input is not empty, makes sure a language is selected, limits code size, sends the request, and saves the result when a user is logged in.
+
+- frontend/src/components/CodeInput.tsx
+  Contains the language selector and Monaco code editor.
+  It also adds editor markers for detected smells so the user can see problem lines.
+
+- frontend/src/components/AnalysisResults.tsx
+  Shows the score, smell counts, and detailed smell cards after analysis.
+
+- frontend/src/app/history/page.tsx
+  Shows saved analyses for signed-in users.
+  It supports deleting one analysis, clearing all history, and loading more items.
+
+- frontend/src/lib/api.ts
+  Contains helper functions for calling the analysis API and storing history data.
+
+- frontend/src/lib/types.ts
+  Defines the TypeScript shapes used for smells, summaries, history items, users, and errors.
+
+- frontend/src/lib/constants.ts
+  Stores supported languages, smell labels, severity labels, and the maximum code size.
+
+- frontend/src/lib/utils.ts
+  Provides helper functions for formatting dates and choosing colors for scores and severity levels.
+
+Backend code
+
+The backend is built with FastAPI and Python.
+
+- backend/app/main.py
+  Creates the FastAPI app, adds middleware, includes the routers, and creates database tables on startup.
+
+- backend/app/api/analysis.py
+  Receives analysis requests and returns the smell detection result.
+
+- backend/app/api/auth.py
+  Handles login, signup, session checks, and logout-related behavior.
+
+- backend/app/api/history.py
+  Returns saved analyses for authenticated users and supports deleting history items.
+
+- backend/app/services/analysis_service.py
+  Coordinates the full analysis process.
+  It chooses the correct detector for the language, runs the checks, and formats the final response.
+
+- backend/app/services/history_service.py
+  Reads, deletes, and clears saved analysis history.
+
+- backend/app/detectors/python.py
+  Runs the Python smell rules.
+
+- backend/app/detectors/javascript.py
+  Runs the JavaScript smell rules.
+
+- backend/app/parsers/python_parser.py
+  Uses Python AST parsing to find functions, variables, and imports.
+
+- backend/app/parsers/javascript_parser.py
+  Parses JavaScript or TypeScript structure so the detector can inspect the code.
+
+- backend/app/rules/base.py
+  Defines the shared rule base class and the helper that creates a smell record.
+
+- backend/app/rules/py_rules.py
+  Defines Python-specific smell checks such as long functions, too many parameters, wildcard imports, bare except blocks, and mutable default arguments.
+
+- backend/app/rules/js_rules.py
+  Defines JavaScript-specific smell checks such as long functions, deep nesting, magic numbers, and unused variables.
+
+What the rules report
+
+Each detected smell includes:
+
+- a unique id
+- the smell type
+- severity
+- a score
+- line and column information
+- a message explaining the problem
+- a recommendation for fixing it
+
+Code flow summary
+
+The frontend collects the code, the backend analyzes it, and the results go back to the frontend for display. If the user is logged in, the result can also be stored so it appears later in the history page.
+
+In short, this codebase is a code-analysis pipeline: input code goes in, smell detection runs in the backend, and a readable report comes out in the browser.
