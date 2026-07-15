@@ -14,7 +14,7 @@ function ResetPasswordForm() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [validLink, setValidLink] = useState(true);
+  const [validLink, _setValidLink] = useState(true);
 
   useEffect(() => {
     // Supabase appends tokens in the URL hash when using PKCE flow
