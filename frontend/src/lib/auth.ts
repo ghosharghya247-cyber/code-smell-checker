@@ -11,6 +11,9 @@ interface AuthState {
   signup: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   setUser: (user: User | null) => void;
+  changePassword: (newPassword: string) => Promise<void>;
+  sendPasswordReset: (email: string) => Promise<void>;
+  deleteAccount: () => Promise<void>;
 }
 
 function mapSupabaseUser(supaUser: { id: string; email?: string; created_at: string }): User {
@@ -78,5 +81,30 @@ export const useAuthStore = create<AuthState>((set) => ({
       user,
       isAuthenticated: !!user,
     });
+  },
+
+  changePassword: async (newPassword: string) => {
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) {
+      throw new Error(error.message);
+    }
+  },
+
+  sendPasswordReset: async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/reset-password`,
+    });
+    if (error) {
+      throw new Error(error.message);
+    }
+  },
+
+  deleteAccount: async () => {
+    const { error } = await supabase.rpc("delete_user");
+    if (error) {
+      throw new Error(error.message);
+    }
+    await supabase.auth.signOut();
+    set({ user: null, isAuthenticated: false });
   },
 }));

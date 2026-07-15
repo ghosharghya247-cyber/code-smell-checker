@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { AuthButton } from "./AuthButton";
-import { ActivitySquare } from "lucide-react";
+import { ActivitySquare, Settings } from "lucide-react";
 
 export function Header() {
   const { user } = useAuth();
@@ -23,6 +23,12 @@ export function Header() {
             {user && (
               <Link href="/history" className="text-slate-300 hover:text-white font-medium transition-colors">
                 History
+              </Link>
+            )}
+            {user && (
+              <Link href="/auth/settings" className="flex items-center gap-1.5 text-slate-300 hover:text-white font-medium transition-colors">
+                <Settings className="w-4 h-4" />
+                Settings
               </Link>
             )}
           </div>

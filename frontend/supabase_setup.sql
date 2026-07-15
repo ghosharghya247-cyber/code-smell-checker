@@ -63,3 +63,26 @@ create policy "Users can insert own chat usage"
 create policy "Users can update own chat usage"
   on chat_usage for update
   using (auth.uid() = user_id);
+
+-- ── Delete Account RPC ───────────────────────────────────────────────────────
+-- Allows authenticated users to permanently delete their own account.
+-- Run this in your Supabase SQL Editor.
+create or replace function delete_user()
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  -- Ensure the caller is authenticated
+  if auth.uid() is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  -- Delete the user from auth.users (cascades to related tables via FK)
+  delete from auth.users where id = auth.uid();
+end;
+$$;
+
+-- Grant execute permission to authenticated users
+grant execute on function delete_user() to authenticated;
