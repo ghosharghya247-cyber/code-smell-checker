@@ -71,15 +71,10 @@ function sseResponse(text: string, status = 200): Response {
   });
 }
 
-function isRateLimit(err: unknown): boolean {
-  const msg = err instanceof Error ? err.message : String(err);
-  return msg.includes("429") || msg.toLowerCase().includes("rate limit") || msg.toLowerCase().includes("quota");
-}
-
 async function* streamGroq(apiKey: string, context: string, message: string, history: { role: "user" | "assistant"; content: string }[]): AsyncGenerator<string> {
   const client = new Groq({ apiKey });
   const stream = await client.chat.completions.create({
-    model: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
+    model: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
     messages: [
       { role: "system", content: `${SYSTEM_PROMPT}\n\n${context}` },
       ...history.slice(-20).map((m) => ({ role: m.role, content: m.content } as Groq.Chat.ChatCompletionMessageParam)),
@@ -208,11 +203,11 @@ export async function POST(request: NextRequest) {
           return;
         } catch (err) {
           const isLast = i === providers.length - 1;
-          if (isRateLimit(err) && !isLast) {
-            controller.enqueue(encoder.encode(`data: ⚠️ ${provider.name} rate limit — switching to ${providers[i + 1].name}...\n\n`));
+          const msg = err instanceof Error ? err.message : String(err);
+          if (!isLast) {
+            controller.enqueue(encoder.encode(`data: ⚠️ ${provider.name} error (${msg}) — switching to ${providers[i + 1].name}...\n\n`));
             continue;
           }
-          const msg = err instanceof Error ? err.message : String(err);
           controller.enqueue(encoder.encode(`data: ⚠️ ${provider.name} error: ${msg}\n\n`));
           controller.enqueue(encoder.encode("data: [DONE]\n\n"));
           controller.close();
